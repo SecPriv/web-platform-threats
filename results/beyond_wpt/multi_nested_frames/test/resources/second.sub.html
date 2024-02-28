@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Second</title>
+    </head>
+    <body>
+        <iframe src="http://{{domains[www]}}:{{ports[http][0]}}/test/resources/third.sub.html"></iframe>
+        <img src="http://{{domains[www]}}:{{ports[http][0]}}/test/resources/img.py" />
+        <script>
+         window.onload = function () {
+             window.top.opener.postMessage('cookie', '*');
+         }
+        </script>
+    </body>
+</html>

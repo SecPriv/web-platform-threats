@@ -1,0 +1,10 @@
+version: '3'
+services:
+  runner:
+    build: .
+    command:
+      - firefox
+      #- chromium
+      - /test/multi_nested_frames.sub.html
+
+      

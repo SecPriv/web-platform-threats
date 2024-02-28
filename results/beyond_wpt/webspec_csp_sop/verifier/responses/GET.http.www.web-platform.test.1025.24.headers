@@ -1,0 +1,8 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "application/x-javascript",
+    "Access-Control-Allow-Origin": "202",
+    "Content-Security-Policy": "script-src 206.test:207; "
+  }
+}

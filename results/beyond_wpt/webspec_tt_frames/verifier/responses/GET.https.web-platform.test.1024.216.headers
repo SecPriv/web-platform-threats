@@ -1,0 +1,10 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "text/html",
+    "Set-Cookie":
+      "__Secure-217=218; Domain=web-platform.test; Path=/219; Secure; SameSite=Strict;",
+    "Content-Security-Policy":
+      "script-src 223.224.test:*;  require-trusted-types-for 'script'; trusted-types;"
+  }
+}

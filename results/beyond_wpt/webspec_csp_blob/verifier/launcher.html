@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src="/resources/channel.sub.js"></script>
+<script src=/websockets/constants.sub.js></script>
+<script src=/portals/resources/stash-utils.sub.js></script>
+<script src="/common/utils.js"></script>
+
+<script>
+
+const delay = (time) =>
+      new Promise((resolve) => setTimeout(resolve, time))
+
+setup({explicit_timeout: true});
+
+const timeout_fn = async(time, label) => {
+  await delay(time) 
+  assert_true(false, label)
+}
+
+
+function run_test(timeout, label, ...fns) {
+  return Promise.race(
+    [ Promise.all(fns.map((x) => x())), 
+      timeout_fn(timeout, label)
+    ]);
+}
+
+
+promise_test(async t => {
+  // here maybe the setup, where we install the SW (and start off the event chain by writing to the stash??)
+   
+
+  
+  
+  window.open('http://www.web-platform.test:1024/verifier/server.py?res=49');
+  StashUtils.putValue('41803d05-47e2-4835-83fd-3caea56bb39e', 'irrelevant');
+  
+  StashUtils.putValue('e1906c1a-06f0-476a-a846-67030aa7b32f', 'dummy');
+  
+   
+
+  await run_test(10000, "Timed out", 
+    
+    () => StashUtils.takeValue("e60dd33f-3215-4ad1-8dd8-63ec8bae88a6").then(t.step_func(value => {
+        assert_equals(value, "obghtagajq", "test 7");
+    })),
+    
+    // () => StashUtils.takeValue("2bf3e298-cb27-4723-8b0d-ac1f540ad954").then(t.step_func(value => {
+    //     assert_equals(value, "PCFET0NUWVBFIGh0bWw+PGh0bWw+PGhlYWQ+PHNjcmlwdCBzcmM9J2h0dHA6Ly8yMS4yMi50ZXN0OjgwODAvdmVyaWZpZXIvY3NwLnB5P29yZGVyPTAnIGRlZmVyID48L3NjcmlwdD48c2NyaXB0IHNyYz0naHR0cHM6Ly8yMS4yMi50ZXN0Ojg0NDMvdmVyaWZpZXIvY3NwLnB5P29yZGVyPTEnIGRlZmVyID48L3NjcmlwdD48c2NyaXB0IHNyYz0naHR0cDovLzEzMzc3LjIyLnRlc3Q6ODA4MC92ZXJpZmllci9jc3AucHk/b3JkZXI9MicgZGVmZXIgPjwvc2NyaXB0PjxzY3JpcHQgc3JjPSdodHRwOi8vMjEuOTUudGVzdDo4MDgwL3ZlcmlmaWVyL2NzcC5weT9vcmRlcj0zJyBkZWZlciA+PC9zY3JpcHQ+PHNjcmlwdCBzcmM9J2h0dHA6Ly8yMS4yMi50ZXN0OjEwMjQvdmVyaWZpZXIvY3NwLnB5P29yZGVyPTQnIGRlZmVyID48L3NjcmlwdD48L2hlYWQ+PGJvZHk+PGlmcmFtZSBzcmM9Jyc+PC9pZnJhbWU+PGZvcm0gYWN0aW9uPScnIG1ldGhvZD0nR0VUJyA+PC9mb3JtPjxmb3JtIGFjdGlvbj0nJyBtZXRob2Q9J0dFVCcgPjwvZm9ybT48Zm9ybSBhY3Rpb249JycgbWV0aG9kPSdHRVQnID48L2Zvcm0+PGlmcmFtZSBzcmM9Jyc+PC9pZnJhbWU+PGlmcmFtZSBzcmM9Jyc+PC9pZnJhbWU+PC9ib2R5PjwvaHRtbD4=", "test 6");
+    // })),
+    
+    () => StashUtils.takeValue("41803d05-47e2-4835-83fd-3caea56bb39e").then(t.step_func(value => {
+        assert_equals(value, "irrelevant", "test 5");
+    })),
+    
+    () => StashUtils.takeValue("648d8b4d-22a9-4e50-a7e5-0fe204ce38b2").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www.web-platform.test.1025.57", "test 4");
+    })),
+    
+    () => StashUtils.takeValue("16f1222d-051b-45c0-962a-4b29eda93a29").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www.web-platform.test.1026.72", "test 3");
+    })),
+    
+    () => StashUtils.takeValue("97f15d26-a567-4d2a-9ba3-253abbc83725").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www.web-platform.test.1024.86", "test 2");
+    })),
+    
+    () => StashUtils.takeValue("3f1f3e5d-f4b0-481e-bcf6-9185cd41cc57").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www.web-platform.test.1024.49", "test 1");
+    })),
+    
+    () => StashUtils.takeValue("b28a182a-b4c1-47ac-93a7-9667c56bf641").then(t.step_func(value => {
+        assert_equals(value, "GPPPG", "test 0");
+    })),
+     
+    async () => { return }
+  );
+}, "LSInvariant.trace");
+
+</script>

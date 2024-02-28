@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src="/resources/channel.sub.js"></script>
+<script src=/websockets/constants.sub.js></script>
+<script src=/portals/resources/stash-utils.sub.js></script>
+<script src="/common/utils.js"></script>
+
+<script>
+
+const delay = (time) =>
+      new Promise((resolve) => setTimeout(resolve, time))
+
+setup({explicit_timeout: true});
+
+const timeout_fn = async(time, label) => {
+  await delay(time) 
+  assert_true(false, label)
+}
+
+
+function run_test(timeout, label, ...fns) {
+  return Promise.race(
+    [ Promise.all(fns.map((x) => x())), 
+      timeout_fn(timeout, label)
+    ]);
+}
+
+
+promise_test(async t => {
+  // here maybe the setup, where we install the SW (and start off the event chain by writing to the stash??)
+   
+
+  
+  
+  window.open('https://www.web-platform.test:8443/verifier/server.py');
+  StashUtils.putValue('2b4bc7da-8226-4c40-8306-7f7514c320a4', 'irrelevant');
+  
+  StashUtils.putValue('683459a0-97e2-4b6f-80d8-78f3d2c1320f', 'dummy');
+  
+   
+
+  await run_test(10000, "Timed out", 
+    
+    () => StashUtils.takeValue("5b087fc7-a9da-4a04-bf25-df7f191d36a5").then(t.step_func(value => {
+        assert_equals(value, "__Host-240=241", "test 6");
+    })),
+    
+    () => StashUtils.takeValue("70910d60-af1c-46b2-b047-f3564e0e5ba4").then(t.step_func(value => {
+        assert_equals(value, "web-platform.test", "test 5");
+    })),
+    
+    () => StashUtils.takeValue("b93a8226-6840-4831-91e9-bea945152d60").then(t.step_func(value => {
+        assert_equals(value, "web-platform.test", "test 4");
+    })),
+    
+    () => StashUtils.takeValue("2b4bc7da-8226-4c40-8306-7f7514c320a4").then(t.step_func(value => {
+        assert_equals(value, "irrelevant", "test 3");
+    })),
+    
+    () => StashUtils.takeValue("34bcecbd-907f-45f8-a140-146acb6c9825").then(t.step_func(value => {
+        assert_equals(value, "GET.https.www.not-webplatform.test.8443.221", "test 2");
+    })),
+    
+    () => StashUtils.takeValue("cfccdd12-0c7c-4c54-8b04-c7a308fd81a3").then(t.step_func(value => {
+        assert_equals(value, "GET.https.www1.web-platform.test.8443.219", "test 1");
+    })),
+    
+    () => StashUtils.takeValue("35005618-4133-40c2-87f0-24ef53d1fb2a").then(t.step_func(value => {
+        assert_equals(value, "GET.https.www.web-platform.test.8443.", "test 0");
+    })),
+     
+    async () => { return }
+  );
+}, "HostInvariant.trace");
+
+</script>

@@ -1,0 +1,8 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "text/html",
+    "Content-Security-Policy":
+      "script-src www.web-platform.test:*;  trusted-types 53; report-uri https://www.web-platform.test:8443/verifier/csp.py"
+  }
+}

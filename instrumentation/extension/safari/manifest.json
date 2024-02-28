@@ -1,0 +1,35 @@
+{
+    "name": "Chrome webrequest test",
+    "version": "0.1",
+    "description": "A test for webrequest",
+    "manifest_version": 2,
+    "permissions": [
+        "storage",
+        "activeTab",
+        "tabs",
+        "webNavigation",
+        "webRequest",
+        "downloads",
+        "cookies",
+        "scripting", 
+        "tabs",
+        "<all_urls>"
+    ],
+
+    "background": {
+      "scripts": ["ext.js"]
+    },
+
+    "content_scripts" : [
+      {
+        "matches" : ["<all_urls>"],
+        "js": ["messaging.js"],
+        "run_at": "document_start"
+      }
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "8589fcfdd1795ed24ee699317d518d68bd22720e@temporary-addon"
+        }
+    }
+}

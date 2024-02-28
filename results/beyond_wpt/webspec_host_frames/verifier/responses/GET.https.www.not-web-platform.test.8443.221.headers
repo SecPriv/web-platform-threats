@@ -1,0 +1,7 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "application/x-javascript",
+    "Access-Control-Allow-Origin": "255"
+  }
+}

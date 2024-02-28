@@ -1,0 +1,10 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "text/html",
+    "Set-Cookie": "70=75; Path=/72; SameSite=Strict;",
+    "Access-Control-Allow-Origin": "102",
+    "Content-Security-Policy":
+      "script-src *.web-platform.test:*;  report-uri https://www.web-platform.test:8443/verifier/csp.py"
+  }
+}

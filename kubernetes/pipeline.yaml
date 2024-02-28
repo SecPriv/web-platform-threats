@@ -1,0 +1,444 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: redis-data
+  name: redis-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: web-chromium-code
+      containers:
+      - name: redis
+        image: redis:latest
+        command: ["redis-server", "--save", "300", "1", "--loglevel", "warning"]
+        volumeMounts:
+          - mountPath: /data
+            name: redis-data
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-lb
+  name: redis-lb
+spec:
+  ports:
+  - name: 6379-6379
+    port: 6379
+    protocol: TCP
+    targetPort: 6379
+  selector:
+    app: redis
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-commander
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-commander
+  template:
+    metadata:
+      labels:
+        app: redis-commander
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: redis-commander
+        image: rediscommander/redis-commander:latest
+        env:
+          - name: REDIS_HOSTS
+            value: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-commander
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8081
+  selector:
+    app: redis-commander
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipeline-yamls
+data:
+  job-runner.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: job-runner
+    spec:
+      completions: 1
+      parallelism: 8
+      backoffLimit: 1000000
+      template:
+        metadata:
+          name: job-runner
+        spec:
+          automountServiceAccountToken: false
+          nodeSelector:
+            kubernetes.io/hostname: wptsec
+          containers:
+          - name: runner
+            image: ghcr.io/secpriv/wpt-runner:latest
+            imagePullPolicy: Always
+            command:
+              - timeout
+              - "$(TIMEOUT)"
+              - bash
+              - -c
+              - |
+                set -eou pipefail
+                TEST_NAME="$(redis-cli -u "$REDIS_URL"  --raw BLPOP "runner:${BROWSER}" 0 | tail -n1 | tr -d '\n')"
+                redis-cli  -u "$REDIS_URL" --raw RPUSH runner:wip "${BROWSER}:${TEST_NAME}"
+                redis-cli -u "$REDIS_URL" --raw SETEX "lease:runner:${BROWSER}:${TEST_NAME}" $TIMEOUT 1
+                START_TIME="$(date +%s.%N)"
+                /sbin/docker-entrypoint.sh "$BROWSER" "$TEST_NAME" || true
+                DURATION="$(awk -v "start_time=${START_TIME}" -v "end_time=$(date +%s.%N)"  'BEGIN { print end_time - start_time }')"
+                KEY_NAME="${BROWSER}:${TEST_NAME}:$(date +%s)"
+                echo $KEY_NAME
+                sleep 5 # Wait for the browser to save the json file
+                cat /home/test/Downloads/*.json | redis-cli -u "$REDIS_URL" --raw -x SET "results:${KEY_NAME}:json"
+                redis-cli -u "$REDIS_URL" --raw SET "results:${KEY_NAME}:runner-time" "${DURATION}"
+                redis-cli -u "$REDIS_URL" --raw RPUSH analyzer "$KEY_NAME"
+                redis-cli -u "$REDIS_URL" --raw LREM runner:wip 1 "${BROWSER}:${TEST_NAME}"
+            env:
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: BROWSER
+              value: firefox
+            - name: TIMEOUT
+              value: "600"
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "1000m"
+              limits:
+                memory: "20Gi"
+                cpu: "16000m"
+          restartPolicy: Never
+  job-analyzer.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: job-analyzer
+    spec:
+      completions: 1
+      parallelism: 15
+      backoffLimit: 1000000
+      template:
+        metadata:
+          name: job-analyzer
+        spec:
+          automountServiceAccountToken: false
+          nodeSelector:
+            kubernetes.io/hostname: wptsec
+          volumes:
+            - name: mnt
+              emptyDir: {}
+          initContainers:
+          - name: fetch-trace
+            image: ghcr.io/secpriv/wpt-trace-matching:latest
+            command:
+              - bash
+              - -c
+              - |
+                set -euo pipefail
+                JSON_NAME="$(redis-cli -u "$REDIS_URL" --raw BLMOVE analyzer analyzer:wip LEFT RIGHT 0 | tr -d '\n')"
+                redis-cli -u "$REDIS_URL" --raw SETEX "lease:analyzer:${JSON_NAME}" $TIMEOUT 1
+                echo "$JSON_NAME" > /mnt/name
+                redis-cli -u "$REDIS_URL" --raw GET "results:${JSON_NAME}:json" > /mnt/trace.json
+            volumeMounts:
+              - name: mnt
+                mountPath: /mnt
+            env:
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: TIMEOUT
+              value: "3600"
+          - name: parse-trace
+            image: ghcr.io/secpriv/wpt-trace-matching:latest
+            imagePullPolicy: Always
+            command:
+              - /bin/parse_trace
+              - /mnt/trace.json
+              - /mnt/trace.smt
+            volumeMounts:
+              - name: mnt
+                mountPath: /mnt
+          containers:
+          - name: z3
+            image: ghcr.io/secpriv/wpt-trace-matching:latest
+            command:
+              - timeout
+              - "$(TIMEOUT)"
+              - bash
+              - -c
+              - |
+                set -euo pipefail
+                KEY_NAME="$(cat /mnt/name | tr -d '\n')"
+                echo "$KEY_NAME"
+                START_TIME="$(date +%s.%N)"
+                z3_wrapper /mnt/trace.smt |& tee /mnt/z3.out
+                DURATION="$(awk -v "start_time=${START_TIME}" -v "end_time=$(date +%s.%N)"  'BEGIN { print end_time - start_time }')"
+                cat /mnt/z3.out | redis-cli -u "$REDIS_URL" --raw -x SET "results:$KEY_NAME:z3"
+                redis-cli -u "$REDIS_URL" --raw SET "results:${KEY_NAME}:z3-time" "${DURATION}"
+                redis-cli -u "$REDIS_URL" --raw LREM analyzer:wip 1 "$KEY_NAME"
+            volumeMounts:
+              - name: mnt
+                mountPath: /mnt
+            env:
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: TIMEOUT
+              value: "2400"
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "1000m"
+              limits:
+                memory: "20Gi"
+                cpu: "16000m"
+          restartPolicy: Never
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: queue-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: queue-manager
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/scale"]
+  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["pods", "pods/attach"]
+  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: queue-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: queue-manager
+subjects:
+- kind: ServiceAccount
+  name: queue-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garbage-collector
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: garbage-collector
+  template:
+    metadata:
+      labels:
+        app: garbage-collector
+    spec:
+      serviceAccountName: queue-manager
+      automountServiceAccountToken: true
+      containers:
+      - name: garbage-collector
+        image: nixery.dev/shell/kubectl/redis/jq/gnused/gnugrep/findutils/coreutils
+        env:
+        - name: INTERVAL
+          value: "300"
+        command:
+          - bash
+          - -c
+          - |
+            set -euo pipefail
+            while true; do
+                COMPLETED_PODS="$(kubectl get pod --field-selector=status.phase==Succeeded | wc -l)"
+                FAILED_PODS="$(kubectl get pod --field-selector=status.phase==Failed | wc -l)"
+                echo "Completed Pods: $(($COMPLETED_PODS - 1))"
+                echo "Failed Pods: $(($FAILED_PODS - 1))"
+                if [[ "$COMPLETED_PODS" -gt 2 ]]; then
+                    kubectl delete pod --field-selector=status.phase==Succeeded
+                fi
+                if [[ "$FAILED_PODS" -gt 2 ]]; then
+                    kubectl delete pod --field-selector=status.phase==Failed
+                fi
+                kubectl get pods | grep -P '[0-9]{3}m' | grep analyzer | cut -f1 -d" "  | xargs kubectl delete pod || true
+                sleep "$INTERVAL"
+            done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue-manager
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: queue-manager
+  template:
+    metadata:
+      labels:
+        app: queue-manager
+    spec:
+      serviceAccountName: queue-manager
+      automountServiceAccountToken: true
+      volumes:
+        - name: yamls
+          configMap:
+            name: pipeline-yamls
+            items:
+              - key: job-runner.yaml
+                path: job-runner.yaml
+              - key: job-analyzer.yaml
+                path: job-analyzer.yaml
+      containers:
+      - name: queue-manager
+        image: nixery.dev/shell/kubectl/redis/jq/gnused
+        env:
+        - name: REDIS_URL
+          value: redis://redis:6379
+        - name: INTERVAL
+          value: "30"
+        volumeMounts:
+          - name: yamls
+            mountPath: /mnt/job-runner.yaml
+            subPath: job-runner.yaml
+          - name: yamls
+            mountPath: /mnt/job-analyzer.yaml
+            subPath: job-analyzer.yaml
+        command:
+          - bash
+          - -c
+          - |
+            set -euo pipefail
+            BROWSERS=(firefox chromium safari)
+
+            kill_jobs () {
+              # Kill jobs when queues are empty
+              NUM_RUNNING=0
+              for BROWSER in ${BROWSERS[@]}; do
+                NUM_BROWSER=$(redis-cli -u  "$REDIS_URL" --json LLEN "runner:${BROWSER}")
+                NUM_WIP=$(redis-cli -u  "$REDIS_URL" --json LLEN "runner:wip")
+                if [[ $NUM_BROWSER -gt 0 || $NUM_WIP -gt 0 ]]; then
+                  NUM_RUNNING=$(( $NUM_RUNNING + 1 ))
+                fi
+              done
+              NUM_QUEUED=$(redis-cli -u  "$REDIS_URL" --json LLEN "analyzer")
+              NUM_WIP=$(redis-cli -u  "$REDIS_URL" --json LLEN "analyzer:wip")
+              if [[ $NUM_QUEUED -gt 0 || $NUM_WIP -gt 0 ]]; then
+                NUM_RUNNING=$(( $NUM_RUNNING + 1 ))
+              fi
+              if [[ "$NUM_RUNNING" -lt "1" ]]; then
+                for BROWSER in ${BROWSERS[@]}; do
+                  kubectl delete job/job-runner-$BROWSER || true
+                done
+                kubectl delete job/job-analyzer || true
+                kubectl scale deployment/macos-runner --replicas=0
+              fi
+            }
+
+            while true; do
+                RUNNER_QUEUES="$(redis-cli -u "$REDIS_URL" --json keys runner* | jq '. | length')"
+                ANALYZER_QUEUES="$(redis-cli -u "$REDIS_URL" --json keys analyzer* | jq '. | length')"
+                if [[ "$RUNNER_QUEUES" -gt 0 || "$ANALYZER_QUEUES" -gt 0 ]]; then
+                   # Running
+                   # Move wip to failed if timed out
+                   for QUEUE in runner analyzer; do
+                     for VAL in $(redis-cli  -u "$REDIS_URL" --raw LRANGE "${QUEUE}:wip" 0 -1); do
+                       if [[ $(redis-cli -u  "$REDIS_URL" --json KEYS "lease:${QUEUE}:${VAL}" | jq 'length') -lt 1 ]]; then
+                         # Expired
+                         redis-cli -u  "$REDIS_URL" --raw LPUSH "${QUEUE}:failed" "$VAL"
+                         redis-cli -u  "$REDIS_URL"  --raw LREM "${QUEUE}:wip" 1 "$VAL"
+                       fi
+                     done
+                   done
+                   kill_jobs
+                else
+                   # Not running
+                   kill_jobs
+                   # Start new jobs
+                   TEST="$(redis-cli -u "$REDIS_URL" --json HGETALL wpt)"
+                   if [[ "$TEST" != "{}" ]]; then
+                     TESTROOT="$(echo "$TEST" | jq -r .test)"
+                     if [[ "$TESTROOT" != "null" ]]; then
+                       # Get number of tests
+                       for T in $(kubectl run -q --rm -i --image="ghcr.io/secpriv/wpt-runner:latest" list-tests -- list-tests "$TESTROOT"); do
+                         redis-cli -u "$REDIS_URL" LPUSH runner "$T"
+                       done
+                       COMPLETIONS=$(redis-cli -u "$REDIS_URL" LLEN runner)
+                       if [[ "$COMPLETIONS" -gt 0 ]]; then
+                         for BROWSER in ${BROWSERS[@]}; do
+                           redis-cli -u "$REDIS_URL" COPY runner "runner:${BROWSER}"
+                           # Start jobs
+                           if [[ "$BROWSER" == "safari" ]]; then
+                               kubectl scale deployment/macos-runner --replicas=5
+                           else
+                               cat /mnt/job-runner.yaml | sed "s/completions: .*/completions: $COMPLETIONS/" | sed "s/firefox/$BROWSER/" | sed "s/job-runner/job-runner-$BROWSER/" | kubectl apply -f -
+                           fi
+                         done
+                         cat /mnt/job-analyzer.yaml | sed "s/completions: .*/completions: $(( $COMPLETIONS * ${#BROWSERS[@]} ))/" | kubectl apply -f -
+                         redis-cli -u "$REDIS_URL" DEL wpt
+                         redis-cli -u "$REDIS_URL" DEL runner
+                       fi
+                     fi
+                   fi
+                fi
+                sleep "$INTERVAL"
+            done

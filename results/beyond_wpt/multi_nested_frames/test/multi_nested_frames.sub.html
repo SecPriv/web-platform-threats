@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Test Nested Frames Mixed-Content Cookies</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<body>
+    <script>
+     promise_test((t) => {
+        return (new Promise(async (resolve, reject) => {
+            let w = window.open("http://{{domains[www]}}:{{ports[http][0]}}/test/resources/first.sub.html");
+            
+            let listener = (e) => {
+                if (e.data == 'cookie') {
+                    assert_not_equals(document.cookie.match(/cookie_from_insecure_resource/), null);
+                    return;
+                }
+                window.removeEventListener('message', listener);
+                w.close()
+                let cookie = document.cookie;
+                assert_not_equals(cookie.match(/test_non_secure_cookie/), null);
+                assert_not_equals(cookie.match(/cookie_from_insecure_resource/), null);
+                resolve(e.data);
+            }
+            window.addEventListener('message', listener);
+        }));
+    }, document.title);
+
+    </script>
+</body>

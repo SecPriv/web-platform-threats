@@ -1,0 +1,11 @@
+version: '3'
+services:
+  runner:
+    build: 
+      context: ../../..
+      dockerfile: results/beyond_wpt/localhost/Dockerfile
+    command:
+      - firefox
+      - cookies/prefix/localhost_cookies.html
+
+      

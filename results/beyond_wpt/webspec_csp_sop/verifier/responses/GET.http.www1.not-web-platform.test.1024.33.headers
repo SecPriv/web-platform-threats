@@ -1,0 +1,8 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "text/html",
+    "Set-Cookie": "34=35; Path=/36; SameSite=Strict;",
+    "Content-Security-Policy": "script-src 37.38.test:*;  trusted-types 39;"
+  }
+}

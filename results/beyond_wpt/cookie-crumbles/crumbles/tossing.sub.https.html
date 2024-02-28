@@ -1,0 +1,77 @@
+<!doctype html>
+<meta charset=utf-8>
+<meta name="timeout" content="long">
+
+<title>Test cookie tossing (Cookie Crumbles)</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="/crumbles/resources/common.sub.js"></script>
+<body>
+    <script>
+     
+     const normalCookie = "normalcookie";
+     const hostCookie = "__Host-securecookie";
+     const namelessNormalCookie = `=${normalCookie}`;
+     const namelessHostCookie = `=${hostCookie}`;
+     const domain = "{{host}}";
+
+     const tossingTests =
+         [
+             {
+                 name: "tossing_nonSecureWithNonSecure",
+                 pre: [ `${normalCookie}=good; path=/`, HTTP | DOMAIN ],
+                 set: [ `${normalCookie}=evil; domain=${domain}; path=/crumbles/resources`, HTTP | SUBDOMAIN ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name: "tossing_nonSecureWithSecure",
+                 pre: [ `${normalCookie}=good; path=/`, HTTP | DOMAIN ],
+                 set: [ `${normalCookie}=evil; domain=${domain}; path=/crumbles/resources; Secure`, HTTPS | SUBDOMAIN ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name: "tossing_SecureWithSecure",
+                 pre: [ `${normalCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ `${normalCookie}=evil; domain=${domain}; path=/crumbles/resources; Secure`, HTTPS | SUBDOMAIN ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name: "tossing_SecureWithNonSecure",
+                 pre: [ `${normalCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ `${normalCookie}=evil; domain=${domain}; path=/crumbles/resources;`, HTTP | SUBDOMAIN ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name: "tossing_httpOnlyWithHttpOnly",
+                 pre: [`${normalCookie}=good; path=/; HttpOnly`, HTTPS | DOMAIN ],
+                 set: [ `${normalCookie}=evil; domain=${domain}; path=/crumbles/resources; HttpOnly`, HTTPS | SUBDOMAIN ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name: "tossing_httpOnlyWithNonHttpOnly",
+                 pre: [ `${normalCookie}=good; path=/; HttpOnly`, HTTPS | DOMAIN ],
+                 set: [ `${normalCookie}=evil; domain=${domain}; path=/crumbles/resources`, HTTPS | SUBDOMAIN | JS ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name:  "tossing_SecureWithNamelessNonSecure",
+                 pre: [ `${normalCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [`${namelessNormalCookie}=evil; domain=${domain}; path=/crumbles/resources`,  HTTP | SUBDOMAIN ],
+                 success: `${normalCookie}=evil`
+             },
+             {
+                 name: "tossing_hostPrefixWithNamelessNonSecure",
+                 pre: [ `${hostCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ `${namelessHostCookie}=evil; domain=${domain}; path=/crumbles/resources`, HTTPS | SUBDOMAIN ],
+                 success: `${hostCookie}=evil`
+             },
+         ];
+     
+     for (const test of tossingTests) {
+         crumblesTest(test.name, test);
+     }
+     
+    </script>
+</body>

@@ -1,0 +1,11 @@
+version: '3'
+services:
+  runner:
+    build: .
+    command:
+      #- firefox
+      - chromium
+      #- /crumbles/tossing.sub.https.html
+      - /crumbles/eviction.sub.https.html
+
+      

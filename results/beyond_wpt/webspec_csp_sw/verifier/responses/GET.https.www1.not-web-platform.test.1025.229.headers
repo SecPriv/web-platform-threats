@@ -1,0 +1,9 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "application/x-javascript",
+    "Set-Cookie": "233=234; Domain=www1.not-web-platform.test; Path=/235; SameSite=Strict;",
+    "Access-Control-Allow-Origin": "280",
+    "Content-Security-Policy": "script-src 'none'; "
+  }
+}

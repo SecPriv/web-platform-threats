@@ -1,0 +1,43 @@
+{
+  "name": "Chrome webrequest test",
+  "version": "0.1",
+  "description": "A test for webrequest",
+  "manifest_version": 3,
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "webNavigation",
+    "webRequest",
+    "downloads",
+    "cookies",
+    "debugger",
+    "scripting"
+  ],
+
+  "host_permissions": ["http://*/", "https://*/", "<all_urls>"],
+
+  "background": {
+    "service_worker": "ext.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["instr.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_origin_as_fallback": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["messaging.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_origin_as_fallback": true
+    }
+  ],
+
+  "devtools_page": "devtools.html"
+}

@@ -1,0 +1,8 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "text/html",
+    "Access-Control-Allow-Origin": "305",
+    "Content-Security-Policy": "script-src http:;  trusted-types 306;"
+  }
+}

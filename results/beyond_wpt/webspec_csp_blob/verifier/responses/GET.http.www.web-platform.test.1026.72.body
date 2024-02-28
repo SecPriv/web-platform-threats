@@ -1,0 +1,35 @@
+let STASH_RESPONDER = "wss://www.web-platform.test:8666/stash_responder_blocking";
+
+class StashUtils {
+  static putValue(key, value) {
+    return new Promise(resolve => {
+        const ws = new WebSocket(STASH_RESPONDER);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({action: 'set', key: key, value: value}));
+        };
+        ws.onmessage = e => {
+          ws.close();
+          resolve();
+        };
+    });
+  }
+
+  static takeValue(key) {
+    return new Promise(resolve => {
+      const ws = new WebSocket(STASH_RESPONDER);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({action: 'get', key: key}));
+      };
+      ws.onmessage = e => {
+        ws.close();
+        resolve(JSON.parse(e.data).value);
+      };
+    });
+  }
+}
+StashUtils.takeValue('c2d674b2-d834-4c7d-81d7-c57fbbe32ad2').then(() => {
+StashUtils.takeValue('6cf72110-4938-4c74-896e-0eeeacb00634').then(async (t_url) => {
+await StashUtils.putValue('e60dd33f-3215-4ad1-8dd8-63ec8bae88a6', 'obghtagajq');
+top.frames[0].location = t_url;
+})
+});

@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><body><form action='' method='GET' ></form>
+<script>
+let STASH_RESPONDER = "wss://web-platform.test:8666/stash_responder_blocking";
+
+class StashUtils {
+  static putValue(key, value) {
+    return new Promise(resolve => {
+        const ws = new WebSocket(STASH_RESPONDER);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({action: 'set', key: key, value: value}));
+        };
+        ws.onmessage = e => {
+          ws.close();
+          resolve();
+        };
+    });
+  }
+
+  static takeValue(key) {
+    return new Promise(resolve => {
+      const ws = new WebSocket(STASH_RESPONDER);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({action: 'get', key: key}));
+      };
+      ws.onmessage = e => {
+        ws.close();
+        resolve(JSON.parse(e.data).value);
+      };
+    });
+  }
+}
+StashUtils.takeValue('365fc582-9612-4d50-b7d8-df63f75164d1').then(() => {
+document.domain = 'web-platform.test';
+console.log("DOMAIN RELAXATION FORM", window.location, document.domain)
+StashUtils.putValue('70910d60-af1c-46b2-b047-f3564e0e5ba4', document.domain);
+StashUtils.putValue('395852ec-17cb-403a-b616-b6164fd1870e', 'dummy');
+});
+StashUtils.takeValue('395852ec-17cb-403a-b616-b6164fd1870e').then(() => {
+parent.document.cookie = '__Host-240=241; Path=/; Secure; SameSite=Strict;';
+console.log("JUST SET THE COOKIE")
+StashUtils.putValue('5b087fc7-a9da-4a04-bf25-df7f191d36a5', 
+    (() => {let vv = parent.document.cookie.match('__Host-240=241'); return vv ? vv[0] : 'error'})());
+});
+</script>
+<iframe src=''></iframe><iframe src=''></iframe></body></html>
+
+
+

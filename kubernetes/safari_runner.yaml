@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: macos-runner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: macos-runner
+  template:
+    metadata:
+      labels:
+        app: macos-runner
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: web-chromium-code
+      automountServiceAccountToken: false
+      volumes:
+      - name: mac-hdd
+        hostPath:
+          path: /home/sp/mac_hdd_ng.img
+      - name: dev-kvm
+        hostPath:
+          path: /dev/kvm
+      - name: mac-snapshot
+        emptyDir: {}
+      initContainers:
+      - name: make-snapshot
+        image: alpine:3.18
+        command:
+          - sh
+          - -c
+          - |
+            apk add qemu-img
+            qemu-img create -f qcow2 -b /mac_hdd_ng.img -F qcow2 /image/snapshot
+        volumeMounts:
+          - mountPath: /mac_hdd_ng.img
+            name: mac-hdd
+            readOnly: true
+          - mountPath: /image
+            name: mac-snapshot
+      containers:
+      - name: runner
+        image: ghcr.io/secpriv/wpt-safari-runner:latest
+        imagePullPolicy: Always
+        env:
+        - name: TIMEOUT
+          value: "120"
+        - name: REDIS_URL
+          value: "redis://redis:6379"
+      - name: macos
+        image: sickcodes/docker-osx:naked
+        volumeMounts:
+          - mountPath: /dev/kvm
+            name: dev-kvm
+          - mountPath: /mac_hdd_ng.img
+            name: mac-hdd
+            readOnly: true
+          - mountPath: /image
+            name: mac-snapshot
+        securityContext:
+          allowPrivilegeEscalation: true
+          readOnlyRootFilesystem: false
+          privileged: true
+          capabilities:
+            add:
+            - NET_RAW
+            - NET_ADMIN
+        env:
+        - name: IMAGE_PATH
+          value: "/image/snapshot"
+        - name: SCREEN_SHARE_PORT
+          value: "10023"
+        ports:
+          - containerPort: 10022
+          - containerPort: 10023
+        resources:
+          requests:
+            memory: "3Gi"
+            cpu: "1000m"
+          limits:
+            memory: "10Gi"
+            cpu: "4000m"

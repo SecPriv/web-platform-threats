@@ -1,0 +1,7 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "text/html",
+    "Content-Security-Policy": "script-src *.web-platform.test:*;  trusted-types 123;"
+  }
+}

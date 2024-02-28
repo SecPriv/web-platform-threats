@@ -1,0 +1,11 @@
+version: '3'
+services:
+  runner:
+    build: 
+      context: ../../..
+      dockerfile: results/beyond_wpt/webspec_host_frames/Dockerfile
+    command:
+      - firefox
+      - verifier/launcher.html
+
+      

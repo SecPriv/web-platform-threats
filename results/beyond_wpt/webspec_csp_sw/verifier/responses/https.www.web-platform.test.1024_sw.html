@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <script>
+            navigator.serviceWorker.register('/verifier/https.www.web-platform.test.1024_sw.js')
+                .then(reg => console.log('ServiceWorker https.www.web-platform.test.1024_sw registered successfully with scope: ', reg.scope))
+                .catch(err => console.log('ServiceWorker https.www.web-platform.test.1024_sw reigstration faled: ', err));
+        </script>
+    </body>
+</html>
+

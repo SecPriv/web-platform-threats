@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src="/resources/channel.sub.js"></script>
+<script src=/websockets/constants.sub.js></script>
+<script src=/portals/resources/stash-utils.sub.js></script>
+<script src="/common/utils.js"></script>
+
+<script>
+
+const delay = (time) =>
+      new Promise((resolve) => setTimeout(resolve, time))
+
+setup({explicit_timeout: true});
+
+const timeout_fn = async(time, label) => {
+  await delay(time) 
+  assert_true(false, label)
+}
+
+
+function run_test(timeout, label, ...fns) {
+  return Promise.race(
+    [ Promise.all(fns.map((x) => x())), 
+      timeout_fn(timeout, label)
+    ]);
+}
+
+
+promise_test(async t => {
+  // here maybe the setup, where we install the SW (and start off the event chain by writing to the stash??)
+   
+
+  
+  
+  window.open('http://www1.not-web-platform.test:1024/verifier/server.py?res=33');
+  StashUtils.putValue('e6ecdb65-4854-491e-ab2f-83d73b678e91', 'irrelevant');
+  
+  StashUtils.putValue('3ab4b3fe-fbe6-4e60-8cb6-3489a4d86be1', 'dummy');
+  
+   
+
+  await run_test(10000, "Timed out", 
+    
+    () => StashUtils.takeValue("eb6133af-92bd-4791-8965-3a7c117fe735").then(t.step_func(value => {
+        assert_equals(value, "obghtagajq", "test 4");
+    })),
+    
+    () => StashUtils.takeValue("e6ecdb65-4854-491e-ab2f-83d73b678e91").then(t.step_func(value => {
+        assert_equals(value, "irrelevant", "test 3");
+    })),
+    
+    () => StashUtils.takeValue("2f4f9c35-7fab-49e0-98c8-226d4d57a298").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www.web-platform.test.1025.24", "test 2");
+    })),
+    
+    () => StashUtils.takeValue("a08f4574-4269-4aff-9d78-6ceff88f7ae5").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www1.not-web-platform.test.1024.45", "test 1");
+    })),
+    
+    () => StashUtils.takeValue("73895e59-104c-4f16-b250-8cb535be13b1").then(t.step_func(value => {
+        assert_equals(value, "GET.http.www1.not-web-platform.test.1024.33", "test 0");
+    })),
+     
+    async () => { return }
+  );
+}, "CSPInvariant.trace");
+
+</script>

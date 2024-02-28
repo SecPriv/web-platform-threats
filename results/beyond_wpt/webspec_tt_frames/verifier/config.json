@@ -1,0 +1,42 @@
+{
+  "browser_host": "web-platform.test",
+  "alternate_hosts": {
+    "alt13377": "13377.test",
+    "alt224": "224.test",
+    "alt214": "214.test",
+    "alt202": "202.test",
+    "alt:": "not-web-platform.test"
+  },
+  "ports": {
+    "http": [ 8080, 1025, 8000 ],
+    "https": [ 8443, 1024, 8444, 8445 ],
+    "ws": [ 8665 ],
+    "wss": [ 8666 ],
+    "http-public": [ "auto" ],
+    "http-private": [ "auto" ],
+    "https-public": [ "auto" ],
+    "https-private": [ "auto" ]
+  },
+  "subdomains": [ "13377", "223", "201" ],
+  "ssl": {
+    "type": "pregenerated",
+    "encrypt_after_connect": false,
+    "openssl": {
+      "openssl_binary": "openssl",
+      "base_path": "tools/certs",
+      "password": "web-platform-tests",
+      "force_regenerate": false,
+      "duration": 30,
+      "base_conf_path": "/usr/lib/ssl/openssl.cnf"
+    },
+    "pregenerated": {
+      "host_key_path": "tools/certs/web-platform.test.key",
+      "host_cert_path": "tools/certs/web-platform.test.pem"
+    },
+    "none": {}
+  },
+  "aliases": [],
+  "check_subdomains": true,
+  "log_level": "debug",
+  "bind_address": true
+}

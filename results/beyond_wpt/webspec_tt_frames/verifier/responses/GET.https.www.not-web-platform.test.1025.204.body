@@ -1,0 +1,36 @@
+let STASH_RESPONDER = "wss://web-platform.test:8666/stash_responder_blocking";
+
+class StashUtils {
+  static putValue(key, value) {
+    return new Promise(resolve => {
+        const ws = new WebSocket(STASH_RESPONDER);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({action: 'set', key: key, value: value}));
+        };
+        ws.onmessage = e => {
+          ws.close();
+          resolve();
+        };
+    });
+  }
+
+  static takeValue(key) {
+    return new Promise(resolve => {
+      const ws = new WebSocket(STASH_RESPONDER);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({action: 'get', key: key}));
+      };
+      ws.onmessage = e => {
+        ws.close();
+        resolve(JSON.parse(e.data).value);
+      };
+    });
+  }
+}
+StashUtils.takeValue('bce991e8-7650-4d16-8ea4-df5da56520f2').then(() => {
+(() => {const policy = trustedTypes.createPolicy('306', {createHTML: input => input});
+let new_el = policy.createHTML('<div>obghtagajq</div>');
+top.document.body.children[3].outerHTML = new_el;
+StashUtils.putValue('a49d9788-6e3b-4df9-8b4c-d9aca1f11e85', top.document.body.children[3].innerText );
+})(); 
+});

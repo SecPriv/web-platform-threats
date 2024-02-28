@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WPTCHECK_ROOT="$(dirname "$(realpath $0)")"
+REGISTRY=ghcr.io/secpriv
+
+RUNNER="${REGISTRY}/wpt-runner:latest"
+TRACEMATCHING="${REGISTRY}/wpt-trace-matching:latest"
+
+print_usage () {
+    echo "Usage: $0 [ -h ] ( pull | build | clean | run BROWSER TEST| verify JSON-TRACE )"
+}
+
+tmpfile=$(mktemp -d)
+time=$(date +%s.%N)
+
+trap "rm -fr \"${tmpfile}\"" EXIT
+
+CONTAINER_NAME_OVERRIDE=""
+
+run () {
+    local browser=$1
+    local test=$2
+    local name="wpt-runner-${browser}-${time}"
+    if [ ! -z $CONTAINER_NAME_OVERRIDE ]; then
+        name="${CONTAINER_NAME_OVERRIDE}"
+    fi  
+    docker run --name "${name}" --rm -ti -v "${tmpfile}:/home/test/Downloads/" "${RUNNER}" "${browser}" "${test}" || true
+}
+
+verify () {
+    local json="$(ls "$tmpfile" | head -n1)"
+    local name="z3-${time}"
+    if [ ! -z $CONTAINER_NAME_OVERRIDE ]; then
+        name="${CONTAINER_NAME_OVERRIDE}"
+    fi
+    docker run --name "parse-trace-${time}" --rm -i -v "${tmpfile}:/mnt" "${TRACEMATCHING}" parse_trace "$json" | \
+        docker run --name "${name}" --rm -i "${TRACEMATCHING}" z3_wrapper
+}
+
+if [[ $# -gt 0 ]]; then
+    while getopts ":n:h" ARG; do
+        echo $ARG
+        case "$ARG" in
+            n)
+                CONTAINER_NAME_OVERRIDE="${OPTARG}"
+                ;;
+            h)
+                print_usage; exit 0
+                ;;
+            ?)
+            echo "Invalid option: ${OPTARG}"
+            ;;
+        esac
+    done
+    shift "$((OPTIND - 1))"
+    
+    case $1 in
+        pull)  make pull  "REGISTRY=${REGISTRY}" ;;
+        build) make build "REGISTRY=${REGISTRY}" ;;
+        clean) make clean "REGISTRY=${REGISTRY}" ;;
+        run)
+            shift
+            [[ $# -eq 2 ]] || {
+                echo "Please specify a browser and a test!"
+                print_usage; exit 1
+            }
+            run "$@"
+            verify
+            ;;
+        verify)
+            shift
+            [[ $# -eq 1 ]] || {
+                echo "Please specify a json file"
+                print_usage; exit 1
+            }
+            cp "$1" "${tmpfile}"
+            verify
+            ;;
+        *)
+            echo 'Unknown command!'
+            print_usage; exit 1
+    esac
+else
+    print_usage
+fi

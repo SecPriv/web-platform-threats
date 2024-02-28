@@ -1,0 +1,81 @@
+<!doctype html>
+<meta charset=utf-8>
+<meta name="timeout" content="long">
+
+<title>Test cookie tossing (Cookie Crumbles)</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/resources/testdriver.js"></script>
+<script src="/resources/testdriver-vendor.js"></script>
+<script src="/crumbles/resources/common.sub.js"></script>
+<body>
+    <script>
+
+     const normalCookie = "normalcookie";
+     const hostCookie = "__Host-securecookie";
+     const namelessNormalCookie = `=${normalCookie}`;
+     const namelessHostCookie = `=${hostCookie}`;
+     const domain = "{{host}}";
+     const overflowCookies = Array.from(Array(200).keys()).map(i => `c${(i+'').padStart(3, '0')}`)
+
+     const validateEviction = (cookies) => {
+         var evilFound = false;
+         var goodFound = false;
+         for(const c of Object.values(cookies.headers)) {
+             if(c == `${normalCookie}=evil`) {
+                 evilFound = true;
+             } else if(c == `${normalCookie}=good`) {
+                 goodFound = true;
+             }
+         }
+         return evilFound && (!goodFound);
+     };
+     const validateHostEviction = (cookies) => {
+         for(const c of Object.values(cookies.headers)) {
+             if(c == `${hostCookie}=good`) {
+                 return false;
+             }
+         }
+         return true;
+     };
+
+     const evictionTests =
+         [
+             {
+                 name: "eviction_nonSecureWithNonSecure",
+                 pre: [ `${normalCookie}=good; path=/`, HTTP | DOMAIN ],
+                 set: [ [...overflowCookies, ...[normalCookie]].map(name => `${name}=evil; domain=${domain}; path=/`), HTTP | SUBDOMAIN | JS ],
+                 success: validateEviction
+             },
+             {
+                 name: "eviction_SecureWithNonSecure",
+                 pre: [ `${normalCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ [...overflowCookies, ...[normalCookie]].map(name => `${name}=evil; domain=${domain}; path=/`), HTTP | SUBDOMAIN ],
+                 success: validateEviction
+             },
+             {
+                 name: "eviction_SecureWithSecure",
+                 pre: [ `${normalCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ [...overflowCookies, ...[normalCookie]].map(name => `${name}=evil; domain=${domain}; path=/; Secure`), HTTPS | SUBDOMAIN ],
+                 success: validateEviction
+             },
+             {
+                 name: "eviction_hostPrefixWithSecure",
+                 pre: [ `${hostCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ [...overflowCookies].map(name => `${name}=evil; domain=${domain}; path=/; Secure`), HTTPS | SUBDOMAIN ],
+                 success: validateHostEviction
+             },
+             {
+                 name: "eviction_hostPrefixWithNonSecure",
+                 pre: [ `${hostCookie}=good; path=/; Secure`, HTTPS | DOMAIN ],
+                 set: [ [...overflowCookies].map(name => `${name}=evil; domain=${domain}; path=/`), HTTP | SUBDOMAIN ],
+                 success: validateHostEviction
+             },
+         ];
+
+     for (const test of evictionTests) {
+         crumblesTest(test.name, test);
+     }
+
+    </script>
+</body>

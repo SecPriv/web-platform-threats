@@ -1,0 +1,13 @@
+version: '3'
+services:
+  wpt:
+    image: wpt-runner
+    build:
+      context: ..
+      dockerfile: runner/Dockerfile
+    volumes:
+      - ./traces:/home/test/Downloads
+    command:
+     - firefox
+     - /cookies/secure/set-from-dom.https.sub.html
+

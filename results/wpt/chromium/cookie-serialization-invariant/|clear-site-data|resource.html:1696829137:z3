@@ -1,0 +1,148 @@
+Warning: /nix/store/yvrdmiy5cz3jxsshs38m62s2kkxmq12x-parse_trace/bin/z3_wrapper.pl:39:
+Warning:    Local definition of user:concurrent_maplist/2 overrides weak import from thread
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+secure-cookies-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+host-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+http-only-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+secure-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+samesite-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+samesite-cookies-integrity
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+secure-cookies-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+http-only-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+samesite-cookies-integrity
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+secure-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+samesite-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+host-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+secure-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+http-only-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+secure-cookies-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+host-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+samesite-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+samesite-cookies-integrity
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+cookie-serialization-invariant
+sat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+http-only-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+host-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+cookie-serialization-invariant
+sat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+samesite-cookies-integrity
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+secure-cookies-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+secure-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+upgradeable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+samesite-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+upgradeable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+upgradeable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+blockable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+cookie-serialization-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+upgradeable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+blockable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace3 =====
+cookie-serialization-invariant
+sat
+(error "line 1 column 28: sort already defined List")
+===== trace4 =====
+blockable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace2 =====
+blockable-mixed-content-filtered
+unknown
+

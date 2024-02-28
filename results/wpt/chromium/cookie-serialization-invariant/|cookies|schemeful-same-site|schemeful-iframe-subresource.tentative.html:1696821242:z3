@@ -1,0 +1,40 @@
+Warning: /nix/store/f7vm86rdj4dahbiga11wwzm04vdai7ay-parse_trace/bin/z3_wrapper.pl:39:
+Warning:    Local definition of user:concurrent_maplist/2 overrides weak import from thread
+(error "line 1 column 28: sort already defined List")
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+host-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+http-only-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+samesite-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+samesite-cookies-integrity
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+secure-cookies-invariant
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+upgradeable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+blockable-mixed-content-filtered
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+secure-cookies-confidentiality
+unsat
+(error "line 1 column 28: sort already defined List")
+===== trace1 =====
+cookie-serialization-invariant
+sat
+

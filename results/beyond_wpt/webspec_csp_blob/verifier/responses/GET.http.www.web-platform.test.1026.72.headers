@@ -1,0 +1,8 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "application/x-javascript",
+    "Content-Security-Policy":
+      "script-src 100.test:101;  report-uri https://www.web-platform.test:8443/verifier/csp.py"
+  }
+}

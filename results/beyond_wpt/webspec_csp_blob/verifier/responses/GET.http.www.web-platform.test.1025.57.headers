@@ -1,0 +1,9 @@
+{
+  "code": "200",
+  "headers": {
+    "Content-Type": "application/x-javascript",
+    "Set-Cookie": "70=71; Path=/72; SameSite=Strict;",
+    "Content-Security-Policy":
+      "script-src 95.test:96;  report-uri https://www.web-platform.test:8443/verifier/csp.py"
+  }
+}
