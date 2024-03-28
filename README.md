@@ -56,11 +56,16 @@ Note that the build **may take up to 30 minutes**, as a specific version of z3 i
 ./wpt-check run firefox '/cookies/secure/set-from-dom.https.sub.html'
 ```
 
-The script runs the instrumented `firefox` browser, converts the execution trace to SMT-LIB, and verifies it with the Z3 theorem prover.
+The script runs the `/cookies/secure/set-from-dom.https.sub.html` WPT test with the instrumented `firefox` browser, converts the execution trace to SMT-LIB, and verifies it with the Z3 theorem prover.
 The verification results are printed on standard output for every subtest and invariant:
 - `unsat`: the invariant is valid;
 - `sat`: the invariant does not hold, i.e., Z3 could find a counterexample.
 
+The test to execute is specified as the path of the test file in the [https://github.com/SecPriv/wpt/tree/wpt-security](WPT repository). A list of tests for each WPT subfolder can be obtained by running the `wpt` utility with the `run --list-tests` options from the WPT repository, or by executing, e.g,
+```
+./wpt-check -l cookies
+```
+to obtain a list of all tests in the `cookies` folder of WPT (`'*'` can be used to list all tests).
 
 The `wpt-check` script supports running Firefox and Chromium. 
 For Safari, refer to the [runner/safari/README.md](runner/safari/README.md) file for a guide on (i) how to install the Safari instrumentation on a MacOS system, and (ii) generate an execution trace in JSON format.
@@ -72,5 +77,5 @@ The JSON trace can be verified using the `wpt-check verify` command, as describe
 ./wpt-check verify safari_1710427255.json
 ```
 
-The sript converts the trace to SMT-LIB and verifies it using Z3.
+The script converts the trace to SMT-LIB and verifies it using Z3.
 The output is printed in the same format as the `wpt-check run` command.

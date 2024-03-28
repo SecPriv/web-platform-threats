@@ -28,7 +28,8 @@ tests = {
                             "expected": {"firefox": ["blockable-mixed-content-filtered", "upgradeable-mixed-content-filtered"], "safari": ["blockable-mixed-content-filtered"]}},
     "webspec_host_frames": {"browsers": ["firefox", "chromium"],
                             "tests": ["verifier/launcher.html"],
-                            "expected": {"firefox": ["host-invariant"]}},
+                            "expected": {"firefox": ["host-invariant"]},
+                            "rerun-on-failure": True},
 }
 
 

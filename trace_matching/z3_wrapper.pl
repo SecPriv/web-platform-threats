@@ -46,7 +46,9 @@ concurrent_maplist(M:Goal, List) :-
 
 
 main([]) :- !, main(['/dev/stdin']).
-main([Filename]) :- !,
+main(['-t', Timeout]) :- !, main(['-t', Timeout, '/dev/stdin']).
+main([Filename]) :- !, main(['-t', '600', Filename]).
+main(['-t', Timeout, Filename]) :- !,
     read_file_to_string(Filename, S, []),
     string_chars(S, Chars),
     (phrase(sexprs(Smt), Chars) ; throw(error(parse_error,_))),
@@ -58,8 +60,9 @@ main([Filename]) :- !,
                 maplist(writeln(TmpStream), Qs),
                 close(TmpStream),
                 with_mutex(Mid, tmp_file_stream(OutName, OutStream, [extension('out'), encoding('text')])),
+                format(string(TimeoutArg), "timeout=~a000", [Timeout]),
                 catch(
-                    process_create(path(z3), ["timeout=600000", "sat.random_seed=31337", "smt.random_seed=31337", TmpName], [stdout(stream(OutStream))]),
+                    process_create(path(z3), [TimeoutArg, "sat.random_seed=31337", "smt.random_seed=31337", TmpName], [stdout(stream(OutStream))]),
                     error(process_error(_, exit(_)), _),
                     true),
                 close(OutStream),

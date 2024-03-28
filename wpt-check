@@ -8,7 +8,7 @@ RUNNER="${REGISTRY}/wpt-runner:latest"
 TRACEMATCHING="${REGISTRY}/wpt-trace-matching:latest"
 
 print_usage () {
-    echo "Usage: $0 [ -h ] ( pull | build | clean | run BROWSER TEST| verify JSON-TRACE )"
+    echo "Usage: $0 [ -h | -l FOLDER | -t TIMEOUT ] ( pull | build | clean | run BROWSER TEST| verify JSON-TRACE )"
 }
 
 tmpfile=$(mktemp -d)
@@ -16,6 +16,7 @@ time=$(date +%s.%N)
 
 trap "rm -fr \"${tmpfile}\"" EXIT
 
+TIMEOUT="600"
 CONTAINER_NAME_OVERRIDE=""
 
 run () {
@@ -24,8 +25,9 @@ run () {
     local name="wpt-runner-${browser}-${time}"
     if [ ! -z $CONTAINER_NAME_OVERRIDE ]; then
         name="${CONTAINER_NAME_OVERRIDE}"
-    fi  
-    docker run --name "${name}" --rm -ti -v "${tmpfile}:/home/test/Downloads/" "${RUNNER}" "${browser}" "${test}" || true
+    fi
+
+    docker run --stop-timeout "${TIMEOUT}" --name "${name}" --rm -ti -v "${tmpfile}:/home/test/Downloads/" "${RUNNER}" "${browser}" "${test}" || true
 }
 
 verify () {
@@ -35,15 +37,21 @@ verify () {
         name="${CONTAINER_NAME_OVERRIDE}"
     fi
     docker run --name "parse-trace-${time}" --rm -i -v "${tmpfile}:/mnt" "${TRACEMATCHING}" parse_trace "$json" | \
-        docker run --name "${name}" --rm -i "${TRACEMATCHING}" z3_wrapper
+        docker run --name "${name}" --rm -i "${TRACEMATCHING}" z3_wrapper -t "${TIMEOUT}"
 }
 
 if [[ $# -gt 0 ]]; then
-    while getopts ":n:h" ARG; do
-        echo $ARG
+    while getopts ":n:t:l:h" ARG; do
         case "$ARG" in
             n)
                 CONTAINER_NAME_OVERRIDE="${OPTARG}"
+                ;;
+            t)
+                TIMEOUT="${OPTARG}"
+                ;;
+            l)
+                docker run --name "list-tests-${time}" --rm -ti "${RUNNER}" list-tests "${OPTARG}"
+                exit 0
                 ;;
             h)
                 print_usage; exit 0
@@ -54,7 +62,7 @@ if [[ $# -gt 0 ]]; then
         esac
     done
     shift "$((OPTIND - 1))"
-    
+
     case $1 in
         pull)  make pull  "REGISTRY=${REGISTRY}" ;;
         build) make build "REGISTRY=${REGISTRY}" ;;
