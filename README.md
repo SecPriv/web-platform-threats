@@ -61,7 +61,7 @@ The verification results are printed on standard output for every subtest and in
 - `unsat`: the invariant is valid;
 - `sat`: the invariant does not hold, i.e., Z3 could find a counterexample.
 
-The test to execute is specified as the path of the test file in the [https://github.com/SecPriv/wpt/tree/wpt-security](WPT repository). A list of tests for each WPT subfolder can be obtained by running the `wpt` utility with the `run --list-tests` options from the WPT repository, or by executing, e.g,
+The test to execute is specified as the path of the test file in the [WPT repository](https://github.com/SecPriv/wpt/tree/wpt-security). A list of tests for each WPT subfolder can be obtained by running the `wpt` utility with the `run --list-tests` options from the WPT repository, or by executing, e.g,
 ```
 ./wpt-check -l cookies
 ```
