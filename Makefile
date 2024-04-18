@@ -6,7 +6,7 @@ REGISTRY=ghcr.io/secpriv
 all: build
 
 runner: instrumentation/extension instrumentation/proxy runner/
-	docker-compose -f runner/docker-compose.yaml build
+	docker compose -f runner/docker-compose.yaml build
 	docker tag wpt-runner:latest $(REGISTRY)/wpt-runner:latest
 
 runner-safari: runner/safari
