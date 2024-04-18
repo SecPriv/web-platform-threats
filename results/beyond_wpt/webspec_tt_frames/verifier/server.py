@@ -14,15 +14,6 @@ def update_globals(parsed_req):
         if g in parsed_req:
             GLOBALS[g] = parsed_req[g][0]
 
-"""
-TODO:
-1. get response
-2. create filename (method.proto.domain.port.corr)
-  - filter the domain until ".test"
-3. parse content by "\n\n" to separate the header from the body (should work, if not, adapt the verifier)
-4. split each header by ":" and add response header
-"""
-
 def calculate_sw_filename(request):
     query = parse_qs(urlparse(request.url).query)
 

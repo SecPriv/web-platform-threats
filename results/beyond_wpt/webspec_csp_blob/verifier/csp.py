@@ -22,25 +22,13 @@ def update_globals(parsed_req):
         if g in parsed_req:
             GLOBALS[g] = parsed_req[g][0]
 
-"""
-TODO:
-1. get response
-2. create filename (method.proto.domain.port.corr)
-  - filter the domain until ".test"
-3. parse content by "\n\n" to separate the header from the body (should work, if not, adapt the verifier)
-4. split each header by ":" and add response header
-"""
-
 def stash_add(uuid, data):
 	try:
 		url = "wss://web-platform.test:8666/stash_responder_blocking"
 		ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-		# localhost_pem = pathlib.Path().with_name("localhost.pem")
 		cert_path = "../tools/certs/cacert.pem"
 		ssl_context.load_verify_locations(cert_path)
-		# print(dir(ssl_context))
 		ws = websocket.create_connection(url, sslopt={'context' : ssl_context}) #sslopt={"cert_reqs": ssl.CERT_NONE})
-		# ws = websocket.create_connection(url, sslopt={"cert_reqs": ssl.CERT_NONE})
 		print(ws)
 
 		ws.send(json.dumps({'action': 'set', 'key': uuid, 'value': data}, separators=(',', ':')))
@@ -99,24 +87,3 @@ def main(request, response):
 			csp_signature = ''.join([test_results[test][k] for k in sorted_keys])
 			os.remove(DATA_FILE)
 			stash_add(REPORT_UUID, csp_signature)
-
-	# query = parse_qs(urlparse(request.url).query)
-	# print(query)
-	# if 'allowed' in query and query['allowed'][0] == '1':
-	# 	print("GOT A NORMAL ONE", request)
-	# 	# fname = caulculate_filename(request, allowed=1)
-	# 	# print("FILENAME", fname)
-	# 	with open(f"verifier/responses/csp_test", "r") as f:
-	# 		uuid = f.read().strip()
-
-	# 	stash_add(uuid, "allowed")
-
-	# elif request.method == 'POST' and 'allowed' in query and query['allowed'][0] == '0':
-	# 	print("GOT A DISALLOWED", request)
-	# 	# filename = caulculate_filename(request, allowed=0)
-	# 	# print("FILENAAME", filename)
-
-	# 	with open(f"verifier/responses/csp_test", "r") as f:
-	# 		uuid = f.read().strip()
-
-	# 	stash_add(uuid, "disallowed")
