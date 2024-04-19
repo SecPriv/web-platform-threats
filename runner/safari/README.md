@@ -56,3 +56,5 @@ The file can then be checked using the `wpt-check verify` command from any Linux
 ## Executing the runner with Kubernetes
 
 Refer to the [../../kubernetes/README.md](../../kubernetes/README.md)  file.
+
+> Note: `runner.sh` requires a valid SSH setup with public key authentication to control Safari remotely without using a password. By default, the script will use a file named `id_ed25519` in the current folder as the private key. 
