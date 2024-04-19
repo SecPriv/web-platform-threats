@@ -60,6 +60,10 @@ def main():
     container = None
 
     try:
+        if args.browser and args.browser not in results.keys():
+            print(f"{args.browser} invalid browser.")
+            print(f"Supported browsers: {', '.join(results.keys())}")
+
         for browser in results.keys():
             if args.browser and browser != args.browser: continue
 
