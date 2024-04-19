@@ -37,3 +37,4 @@ The script does not support any command line argument and will run a new browser
 ```
 
 Every subfolder includes a `traces` folder containing the execution trace in JSON format where a violation was discovered.
+`webspec_` directories contain a `verifier` folder with self-contained WPT tests generated using the [WebSpec](https://github.com/SecPriv/webspec) tool.
