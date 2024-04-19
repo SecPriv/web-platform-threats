@@ -29,7 +29,7 @@ Web Platform Threats: Automated Detection of Web Security Issues With WPT.
 
 ## Usage
 
-WPT Security requires a working [docker](https://docker.io) installation, the bash shell and GNU make.
+WPT Security requires a working [docker](https://docker.io) installation, the bash shell and GNU make. Make sure the user is in the `docker` group and that the `compose` docker plugin is installed.
 
 ### Download or build the pipeline docker images
 
@@ -56,7 +56,8 @@ Note that the build **may take up to 30 minutes**, as a specific version of z3 i
 ./wpt-check run firefox '/cookies/secure/set-from-dom.https.sub.html'
 ```
 
-The script runs the `/cookies/secure/set-from-dom.https.sub.html` WPT test with the instrumented `firefox` browser, converts the execution trace to SMT-LIB, and verifies it with the Z3 theorem prover.
+The script runs the `wpt-runner` container, which executes the `/cookies/secure/set-from-dom.https.sub.html` WPT test with the instrumented `firefox` browser and collecting trace. Then, the `wpt-trace-matching`` container is run, which converts the obtained execution trace to SMT-LIB, and verifies it with the Z3 theorem prover.
+
 The verification results are printed on standard output for every subtest and invariant:
 - `unsat`: the invariant is valid;
 - `sat`: the invariant does not hold, i.e., Z3 could find a counterexample.
