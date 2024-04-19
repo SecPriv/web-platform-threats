@@ -15,8 +15,7 @@ FROM ghcr.io/secpriv/wpt-runner:latest
 USER root
 
 # Add new test
-#ADD results/bwyond_wpt/localhost/cookie-helper.sub.js /home/test/web-platform-tests/cookies/resources/cookie-helper.sub.js
-ADD results/beyond_wpt/localhost/localhost_cookies.html /home/test/web-platform-tests/cookies/prefix/localhost_cookies.html
+ADD results/beyond_wpt/localhost/test/localhost_cookies.html /home/test/web-platform-tests/cookies/prefix/localhost_cookies.html
 
 # Patch chrome extension
 RUN sed -i 's/web-platform.test/localhost/' /home/test/extension_chromium/ext.js
