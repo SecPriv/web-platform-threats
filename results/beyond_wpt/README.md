@@ -24,17 +24,16 @@ The script does not support any command line argument and will run a new browser
 ## Directory Structure
 
 ```
-├── cookie-crumbles/
-├── localhost/
-├── multi_nested_frames/
-├── webspec_csp_blob/
-├── webspec_csp_sop/
-├── webspec_csp_sw/
-├── webspec_host_frames/
-├── webspec_tt_frames/
+├── cookie-crumbles/         tests 6 and 7 of Table 5
+├── localhost/               test 8 of Table 5
+├── multi_nested_frames/     test 9 of Table 5
+├── webspec_csp_blob/        \
+├── webspec_csp_sop/         |
+├── webspec_csp_sw/          | tests 1-5 of Table 5
+├── webspec_host_frames/     |
+├── webspec_tt_frames/       /
 ├── check-results.py*
 └── README.md
 ```
 
-Every subfolder includes a `traces` folder containing the execution trace in JSON format where a violation was discovered.
-`webspec_` directories contain a `verifier` folder with self-contained WPT tests generated using the [WebSpec](https://github.com/SecPriv/webspec) tool.
+Every subfolder includes a `traces` folder containing the execution trace in JSON format where a violation was discovered. `webspec_` directories contain a `verifier` folder with self-contained WPT tests generated using the [WebSpec](https://github.com/SecPriv/webspec) verifier component. All other folders contain manually written tests where the test entrypoint is in the `test` folder.
