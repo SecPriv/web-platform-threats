@@ -11,6 +11,12 @@ print_usage () {
     echo "Usage: $0 [ -h | -l FOLDER | -t TIMEOUT ] ( pull | build | clean | run BROWSER TEST| verify JSON-TRACE )"
 }
 
+
+docker info &> /dev/null || {
+    echo "Error connecting to docker daemon. Make sure your user has the correct permissions, e.g., is part of the 'docker' group."
+    exit 1
+}
+
 tmpfile=$(mktemp -d)
 time=$(date +%s.%N)
 
