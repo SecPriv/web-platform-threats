@@ -11,7 +11,7 @@ import re
 import argparse
 import contextlib
 
-TRIES = 18
+TRIES = 20
 LINE_UP = '\033[1A'
 LINE_CLEAR = '\x1b[2K'
 RED = 31
